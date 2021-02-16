@@ -21,6 +21,7 @@ api = Api(app)
 scheduler = BackgroundScheduler({'apscheduler.timezone': 'Asia/Kolkata'})
 scheduler.add_jobstore(jobstore='mongodb', database='iqoption', collection='jobs')
 
+
 @app.before_first_request
 def initialize_database():
     Database.initialize()
@@ -58,22 +59,107 @@ def testfunc(jobid,
                                   stoptimeminute_tmp,
                                   day_str,
                                   amount_tmp))
-    Iq = IQ_Option("elamparuthi2021@gmail.com", "Harur@1991")
-    Iq.connect()
-    # Money = 1
-    # ACTIVES = "EURUSD"
-    Money = int(amount_tmp)
-    ACTIVES = instrumentid_tmp
-    if direction_tmp == "BUY":
-        ACTION = "call"  # or "put"
+    if instrumenttype_tmp == 'BINARY' or instrumenttype_tmp == 'binary':
+        Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
+        Iq.connect()
+        print(Iq.connect())
+        # Money = 1
+        # ACTIVES = "EURUSD"
+        Money = int(amount_tmp)
+        ACTIVES = instrumentid_tmp
+        if direction_tmp == "BUY":
+            ACTION = "call"  # or "put"
+        else:
+            ACTION = "put"
+        expirations_mode = 1
+        check, id = Iq.buy(Money, ACTIVES, ACTION, expirations_mode)
+        if check:
+            print("{}: JobId {} {} at {}".format(jobid,ACTIVES,ACTION ,datetime.now()))
+        else:
+            print("buy fail")
+    elif instrumenttype_tmp == 'DIGITAL' or instrumenttype_tmp == 'digital':
+        Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
+        Iq.connect()
+        print(Iq.connect())
+        # Money = 1
+        # ACTIVES = "EURUSD"
+        Money = int(amount_tmp)
+        ACTIVES = instrumentid_tmp
+        if direction_tmp == "BUY":
+            ACTION = "call"  # or "put"
+        else:
+            ACTION = "put"
+        expirations_mode = 1
+        check, id = Iq.buy_digital_spot(Money, ACTIVES, ACTION, expirations_mode)
+        if check:
+            print("{}: JobId {} {} at {}".format(jobid, ACTIVES, ACTION, datetime.now()))
+        else:
+            print("buy fail")
     else:
-        ACTION = "put"
-    expirations_mode = 1
-    check, id = Iq.buy(Money, ACTIVES, ACTION, expirations_mode)
-    if check:
-        print("{}: JobId {} {} at {}".format(jobid,ACTIVES,ACTION ,datetime.now()))
-    else:
-        print("buy fail")
+        Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
+        Iq.connect()
+        print(Iq.connect())
+        print("__For_Forex_Stock_Commodities_Crypto_ETFs")
+        instrument_type = instrumenttype_tmp
+        instrument_id = instrumentid_tmp
+        if direction_tmp == "BUY":
+            side = "buy"  # or "put"
+        else:
+            side = "sell"
+        amount = int(amount_tmp)
+        leverage = int(leverage_tmp)
+        type = "market"
+        limit_price = None
+        stop_price = None
+        stop_lose_kind = "percent"
+        stop_lose_value = 95
+        take_profit_kind = None
+        take_profit_value = None
+        use_trail_stop = True
+        auto_margin_call = False
+        use_token_for_commission = False
+        print("instrument_type: {},"
+              "instrument_id: {},"
+              "side: {},"
+              "leverage: {},"
+              "type: {},"
+              "limit_price: {},"
+              "stop_price: {},"
+              "stop_lose_value: {},"
+              "take_profit_value: {},"
+              "take_profit_kind: {},"
+              "use_trail_stop: {},"
+              "auto_margin_call: {},"
+              "use_token_for_commission: {}".format(instrument_type, instrument_id, side, amount, leverage,
+                                                    type, limit_price, stop_price, stop_lose_value, stop_lose_kind,
+                                                    take_profit_value, take_profit_kind, use_trail_stop,
+                                                    auto_margin_call,
+                                                    use_token_for_commission))
+        check, id = Iq.buy_order(instrument_type=instrument_type, instrument_id=instrument_id,
+                                           side=side, amount=amount, leverage=leverage,
+                                           type=type, limit_price=limit_price, stop_price=stop_price,
+                                           stop_lose_value=stop_lose_value, stop_lose_kind=stop_lose_kind,
+                                           take_profit_value=take_profit_value, take_profit_kind=take_profit_kind,
+                                           use_trail_stop=use_trail_stop, auto_margin_call=auto_margin_call,
+                                           use_token_for_commission=use_token_for_commission)
+        # if check:
+        #     print(check)
+        # else:
+        #     print("no check")
+        if check:
+            print("{}: JobId {} {} at {}".format(jobid, instrument_type, instrument_id, datetime.now()))
+        else:
+            print("buy fail")
+
+        while Iq.get_async_order(id) == None:
+            pass
+
+        order_data = Iq.get_async_order(id)
+        print(Iq.get_async_order(id))
+        # while Iq.get_async_order(id) == None:
+        #     pass
+        # order_data = Iq.get_async_order(id)
+        # print(Iq.get_async_order(id))
     # print(instrumentid_tmp)
     # print(instrumenttype_tmp)
     # print(direction_tmp)
@@ -144,7 +230,7 @@ class PlaceSchedule(Resource):
         print(content)
         print(type(content))
         Database.insert_one(collection="schedule", data=content)
-        starthour = content['starttimehour'] + content['starttimeminute']
+        starthour = content['startTimeHour'] + content['startTimeMinute']
         print(starthour)
         print(type(starthour))
         return "Success"
@@ -165,19 +251,19 @@ class PlacePanel(Resource):
         Database.insert_one(collection="panel", data=content)
         jobid = str(time.time())
         print(jobid)
-        bet_record = Database.find_one(collection='bets', query={'betName':content['betname']})
-        print(content['betname'])
+        bet_record = Database.find_one(collection='bets', query={'betName':content['betName']})
+        print(content['betName'])
         print(bet_record)
-        sch_record = Database.find_one(collection='schedule', query={'schedulename':content['schedulename']})
+        sch_record = Database.find_one(collection='schedule', query={'scheduleName':content['scheduleName']})
         print(sch_record)
         instrumentid_tmp = bet_record['instrumentId']
         instrumenttype_tmp = bet_record['instrumentType']
         direction_tmp = bet_record['side']
         leverage_tmp = bet_record['leverage']
-        starttimehour_tmp = sch_record['starttimehour']
-        starttimeminute_tmp = sch_record['starttimeminute']
-        stoptimehour_tmp = sch_record['stoptimehour']
-        stoptimeminute_tmp = sch_record['stoptimeminute']
+        starttimehour_tmp = sch_record['startTimeHour']
+        starttimeminute_tmp = sch_record['startTimeMinute']
+        stoptimehour_tmp = sch_record['stopTimeHour']
+        stoptimeminute_tmp = sch_record['stopTimeMinute']
         print(sch_record['formDays'])
         tmp_arr = sch_record['formDays']
         print(tmp_arr)
@@ -240,6 +326,30 @@ class PlacePanel(Resource):
                               day_str,
                               amount_tmp
                           ])
+
+        # scheduler.add_job(testfunc, 'cron',
+        #                   # hour=hour_str,
+        #                   # minute=min_str,
+        #                   # day_of_week=day_str,
+        #                   # month='*',
+        #                   # year='*',
+        #                   # id=jobid,
+        #                   next_run_time=datetime.now(),
+        #                   args=[
+        #                       jobid,
+        #                       instrumentid_tmp,
+        #                       instrumenttype_tmp,
+        #                       direction_tmp,
+        #                       leverage_tmp,
+        #                       starttimehour_tmp,
+        #                       starttimeminute_tmp,
+        #                       stoptimehour_tmp,
+        #                       stoptimeminute_tmp,
+        #                       day_str,
+        #                       amount_tmp
+        #                   ])
+
+
         return "Success"
 
         # scheduler.add_job(testfunc,
