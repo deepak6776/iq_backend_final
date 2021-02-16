@@ -28,6 +28,8 @@ def initialize_database():
 
 
 def testfunc(jobid,
+             email,
+             password,
              instrumentid_tmp,
              instrumenttype_tmp,
              direction_tmp,
@@ -40,6 +42,8 @@ def testfunc(jobid,
              amount_tmp):
     print("{}: JobId executing... current time {}".format(jobid, datetime.now()))
     print("{}: JobId parameters "
+          "{}: email"
+          "{}: password"
           "instrumentId: {} "
           "instrumentType: {} "
           "diection_tmp: {} "
@@ -49,7 +53,7 @@ def testfunc(jobid,
           "stoptimehour_tmp: {}"
           "stoptimeminute_tmp: {}"
           "day_str: {}"
-          "amount_tmp: {}".format(jobid,instrumentid_tmp,
+          "amount_tmp: {}".format(jobid,email,password,instrumentid_tmp,
                                   instrumenttype_tmp,
                                   direction_tmp,
                                   leverage_tmp,
@@ -60,7 +64,9 @@ def testfunc(jobid,
                                   day_str,
                                   amount_tmp))
     if instrumenttype_tmp == 'BINARY' or instrumenttype_tmp == 'binary':
-        Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
+        print("In binary")
+        Iq = IQ_Option(email=email, password=password)
+        # Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
         Iq.connect()
         print(Iq.connect())
         # Money = 1
@@ -78,29 +84,38 @@ def testfunc(jobid,
         else:
             print("buy fail")
     elif instrumenttype_tmp == 'DIGITAL' or instrumenttype_tmp == 'digital':
-        Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
+        print("In digital!")
+        Iq = IQ_Option(email=email, password=password)
+        # Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
         Iq.connect()
         print(Iq.connect())
         # Money = 1
         # ACTIVES = "EURUSD"
         Money = int(amount_tmp)
-        ACTIVES = instrumentid_tmp
+        ACTIVES = str(instrumentid_tmp)
         if direction_tmp == "BUY":
             ACTION = "call"  # or "put"
         else:
             ACTION = "put"
-        expirations_mode = 1
-        check, id = Iq.buy_digital_spot(Money, ACTIVES, ACTION, expirations_mode)
+        DURATION = 1
+        print("Money: {} ACTIVES: {} ACTION: {} expiration_mode: {}".format(Money,ACTIVES,ACTION,DURATION))
+        # print(type(Money))
+        # print(type(ACTIVES))
+        # print(type(ACTION))
+        # print(type(DURATION))
+        check, id = Iq.buy_digital_spot(ACTIVES, Money, ACTION, DURATION)
         if check:
             print("{}: JobId {} {} at {}".format(jobid, ACTIVES, ACTION, datetime.now()))
         else:
             print("buy fail")
     else:
-        Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
+        Iq = IQ_Option(email=email, password=password)
+        # Iq = IQ_Option("hackeratheart@gmail.com", "aswdkl;123")
         Iq.connect()
         print(Iq.connect())
         print("__For_Forex_Stock_Commodities_Crypto_ETFs")
-        instrument_type = instrumenttype_tmp
+        instrument_type = instrumenttype_tmp.lower()
+        print(instrument_type)
         instrument_id = instrumentid_tmp
         if direction_tmp == "BUY":
             side = "buy"  # or "put"
@@ -246,6 +261,8 @@ class PlacePanel(Resource):
     @staticmethod
     def post():
         content = request.get_json(silent=True)
+        email = content['email']
+        password = content['password']
         print(content)
         print(type(content))
         Database.insert_one(collection="panel", data=content)
@@ -253,11 +270,14 @@ class PlacePanel(Resource):
         print(jobid)
         bet_record = Database.find_one(collection='bets', query={'betName':content['betName']})
         print(content['betName'])
-        print(bet_record)
+        print("betrecord:{} ".format(bet_record))
         sch_record = Database.find_one(collection='schedule', query={'scheduleName':content['scheduleName']})
         print(sch_record)
         instrumentid_tmp = bet_record['instrumentId']
         instrumenttype_tmp = bet_record['instrumentType']
+        print("betrecord:{} ".format(bet_record))
+        print("instrument Type: {}".format(instrumenttype_tmp))
+        print("instrument Id: {}".format(instrumentid_tmp))
         direction_tmp = bet_record['side']
         leverage_tmp = bet_record['leverage']
         starttimehour_tmp = sch_record['startTimeHour']
@@ -289,6 +309,8 @@ class PlacePanel(Resource):
         # hour_str = starttimehour_tmp + "-" + stoptimehour_tmp
         hour_str = starttimehour_tmp
         min_str = starttimeminute_tmp
+        print("instrument Type: {}".format(instrumenttype_tmp))
+        print("instrument Id: {}".format(instrumentid_tmp))
         # if monday_tmp:
         #     day_str = day_str + 'mon'
         # if tuesday_tmp:
@@ -315,6 +337,8 @@ class PlacePanel(Resource):
                           id=jobid,
                           args=[
                               jobid,
+                              email,
+                              password,
                               instrumentid_tmp,
                               instrumenttype_tmp,
                               direction_tmp,
